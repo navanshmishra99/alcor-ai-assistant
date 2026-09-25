@@ -1,0 +1,23 @@
+# Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+
+# Environment variables
+.env
+**/.env
+
+# Local data
+backend/data/*
+!backend/data/.gitkeep
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.vscode/
+
+# OS
+Thumbs.db
+Desktop.ini
