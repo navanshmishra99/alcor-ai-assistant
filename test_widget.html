@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Alcor Solutions | Ask Alcor</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Arial,
+                sans-serif;
+
+            background: #f8fafc;
+
+            color: #172033;
+        }
+
+
+        .page {
+
+            min-height: 100vh;
+
+            display: flex;
+
+            flex-direction: column;
+        }
+
+
+        /* Header */
+
+        header {
+
+            height: 70px;
+
+            display: flex;
+
+            align-items: center;
+
+            padding: 0 7%;
+
+            background: white;
+
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            font-size: 20px;
+
+            font-weight: 700;
+        }
+
+
+        .logo {
+
+            width: 36px;
+
+            height: 36px;
+
+            border-radius: 50%;
+
+            background: #172033;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-weight: 700;
+        }
+
+
+        /* Main */
+
+        main {
+
+            flex: 1;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 40px 20px;
+        }
+
+
+        .content {
+
+            width: 100%;
+
+            max-width: 760px;
+
+            text-align: center;
+        }
+
+
+        .content h1 {
+
+            margin: 0 0 14px;
+
+            font-size: 42px;
+
+            font-weight: 700;
+
+            letter-spacing: -1px;
+        }
+
+
+        .content p {
+
+            max-width: 580px;
+
+            margin: 0 auto 26px;
+
+            color: #64748b;
+
+            font-size: 17px;
+
+            line-height: 1.6;
+        }
+
+
+        .ask-button {
+
+            border: none;
+
+            background: #172033;
+
+            color: white;
+
+            padding: 12px 22px;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            cursor: pointer;
+        }
+
+
+        .ask-button:hover {
+
+            background: #27334a;
+        }
+
+
+        /* Small information section */
+
+        .info {
+
+            margin-top: 55px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 16px;
+        }
+
+
+        .info-item {
+
+            padding: 18px;
+
+            background: white;
+
+            border: 1px solid #e5e7eb;
+
+            border-radius: 10px;
+
+            text-align: left;
+        }
+
+
+        .info-item strong {
+
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 14px;
+        }
+
+
+        .info-item span {
+
+            color: #64748b;
+
+            font-size: 13px;
+        }
+
+
+        /* Footer */
+
+        footer {
+
+            padding: 20px;
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            font-size: 12px;
+        }
+
+
+        @media (max-width: 650px) {
+
+            .content h1 {
+
+                font-size: 34px;
+            }
+
+
+            .info {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="page">
+
+
+    <header>
+
+        <div class="brand">
+
+            <div class="logo">
+                A
+            </div>
+
+            Alcor Solutions
+
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <div class="content">
+
+            <h1>
+                Ask Alcor
+            </h1>
+
+            <p>
+                A simple AI assistant to help you
+                find information about Alcor Solutions,
+                its leadership, services, partnerships,
+                and more.
+            </p>
+
+            <button
+                class="ask-button"
+                onclick="
+                    document
+                        .querySelector('.alcor-launcher')
+                        ?.click()
+                "
+            >
+                Ask a question
+            </button>
+
+
+            <div class="info">
+
+                <div class="info-item">
+
+                    <strong>
+                        About Alcor
+                    </strong>
+
+                    <span>
+                        Learn about the company and
+                        its work.
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <strong>
+                        Leadership
+                    </strong>
+
+                    <span>
+                        Learn about Alcor's leadership
+                        team.
+                    </span>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <strong>
+                        Alcor Knowledge
+                    </strong>
+
+                    <span>
+                        Answers are based on the
+                        available Alcor knowledge.
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <footer>
+
+        Ask Alcor · Alcor Solutions Inc.
+
+    </footer>
+
+
+    <script src="wordpress/widget.js"></script>
+
+</div>
+
+</body>
+
+</html>
