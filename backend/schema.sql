@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS chunks (
     document_id BIGINT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
     chunk_index INTEGER NOT NULL,
     content TEXT NOT NULL,
-    embedding VECTOR(1536),
+    embedding VECTOR(384),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE(document_id, chunk_index)
 );
