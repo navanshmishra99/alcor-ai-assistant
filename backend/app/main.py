@@ -11,8 +11,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from backend.app.api.chat import router as chat_router
-from backend.app.knowledge.ingest import ensure_knowledge_base_loaded
+from .api.chat import router as chat_router
+from .knowledge.ingest import ensure_knowledge_base_loaded
 
 
 # =========================================================
@@ -173,6 +173,11 @@ kb_status = {
     "chunk_count": 0,
 }
 
+model_status = {
+    "ready": False,
+    "status": "loading",
+}
+
 
 # =========================================================
 # Knowledge-base loading
@@ -233,6 +238,10 @@ def warm_up_model() -> None:
     """
 
     if not MODEL_WARMUP_ENABLED:
+        model_status.update(
+            ready=True,
+            status="disabled",
+        )
         logger.info("Model warm-up disabled.")
         return
 
@@ -251,12 +260,20 @@ def warm_up_model() -> None:
             )
 
             if response.is_success:
+                model_status.update(
+                    ready=True,
+                    status="ready",
+                )
                 logger.info(
                     "Language model warm-up completed: model=%s keep_alive=%s",
                     OLLAMA_MODEL,
                     OLLAMA_KEEP_ALIVE,
                 )
             else:
+                model_status.update(
+                    ready=False,
+                    status=f"http_{response.status_code}",
+                )
                 logger.warning(
                     "Language model warm-up returned HTTP %s.",
                     response.status_code,
@@ -328,9 +345,12 @@ async def wait_for_knowledge_base(
         and request.url.path.rstrip("/") == "/api/chat"
     )
 
-    if is_chat_request and not kb_status["ready"]:
+    if is_chat_request and (
+        not kb_status["ready"] or
+        not model_status["ready"]
+    ):
 
-        if kb_status["status"] == "failed":
+        if kb_status["status"] == "failed" or model_status["status"] == "failed":
             return JSONResponse(
                 status_code=503,
                 content={
@@ -462,6 +482,8 @@ def health_check():
             "provider": "ollama",
             "model": OLLAMA_MODEL,
             "warmup_enabled": MODEL_WARMUP_ENABLED,
+            "ready": model_status["ready"],
+            "status": model_status["status"],
         },
     }
 

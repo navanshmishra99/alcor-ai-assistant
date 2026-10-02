@@ -4,27 +4,35 @@ import os
 import re
 
 
-FALLBACK_ANSWER = (
-    "I don't have that information in the Alcor knowledge base."
-)
+def _env_str(name: str, default: str) -> str:
+    value = os.getenv(name)
+    return default if value is None or not value.strip() else value.strip()
 
 
 def _env_float(name: str, default: float) -> float:
     try:
         return float(os.getenv(name, str(default)))
-    except ValueError:
+    except (TypeError, ValueError):
         return default
 
 
-# Share of a line's meaningful words that must appear in the retrieved
-# knowledge for the line to count as supported.
+# Configurable fallback. No company/domain name is hard-coded.
+FALLBACK_ANSWER = _env_str(
+    "GROUNDING_FALLBACK_ANSWER",
+    "I don't have that information in the knowledge base.",
+)
+
+
+# Share of meaningful words that must be supported by retrieved knowledge.
 MIN_SUPPORT = _env_float("GROUNDING_MIN_SUPPORT", 0.5)
 
-# Words that may appear in answers even if the knowledge never uses them
-# (the company / assistant name, for example). Comma separated.
+
+# Optional terms that are allowed even when they do not occur in context.
+# Configure through:
+# GROUNDING_ALLOWED_TERMS="term1,term2,term3"
 ALLOWED_TERMS = {
     term.strip().lower()
-    for term in os.getenv("GROUNDING_ALLOWED_TERMS", "alcor,solutions").split(",")
+    for term in os.getenv("GROUNDING_ALLOWED_TERMS", "").split(",")
     if term.strip()
 }
 
@@ -44,7 +52,7 @@ STOPWORDS = frozenset(
 
 
 def _stem(word: str) -> str:
-    """Very light stemming so 'leads' / 'leading' / 'led' style variants match."""
+    """Light stemming for common word-form variations."""
     for suffix in ("ing", "ed", "es", "s"):
         if word.endswith(suffix) and len(word) - len(suffix) >= 3:
             return word[: -len(suffix)]
@@ -57,8 +65,11 @@ def _tokens(text: str) -> list[str]:
 
 def _context_vocabulary(context: str) -> tuple[set[str], set[str]]:
     """
-    Return (stems, raw_words) found in the retrieved knowledge.
-    Both the title and the content of every chunk count as knowledge.
+    Build vocabulary from the complete retrieved knowledge.
+
+    Returns:
+        stems: stemmed vocabulary
+        raw: exact vocabulary
     """
     stems: set[str] = set()
     raw: set[str] = set()
@@ -77,38 +88,52 @@ def _strip_markdown(line: str) -> str:
     return line.strip()
 
 
-def _is_supported(line: str, stems: set[str], raw: set[str]) -> bool:
+def _is_supported(
+    line: str,
+    stems: set[str],
+    raw: set[str],
+) -> bool:
     text = _strip_markdown(line)
     tokens = _tokens(text)
 
     meaningful = [
-        token for token in tokens
-        if token not in STOPWORDS
-        and token not in ALLOWED_TERMS
-        and len(token) > 1
+        token
+        for token in tokens
+        if (
+            token not in STOPWORDS
+            and token not in ALLOWED_TERMS
+            and len(token) > 1
+        )
     ]
 
-    # Too short to contain a checkable claim ("Sure!", "Here you go:").
+    # Conversational / formatting-only text.
     if len(meaningful) < 2:
         return True
 
-    # Numbers and years must appear in the knowledge exactly.
+    # Numbers and years must be present exactly in retrieved knowledge.
     for token in meaningful:
         if any(ch.isdigit() for ch in token) and token not in raw:
             return False
 
-    # Names (capitalised words inside the sentence) must appear in the knowledge.
+    # Explicit names must exist in the retrieved knowledge.
     words = re.findall(r"[A-Za-z][\w'’-]*", text)
+
     for index, word in enumerate(words):
         if index == 0 or not word[0].isupper() or word.isupper():
             continue
+
         lowered = word.lower()
+
         if lowered in STOPWORDS or lowered in ALLOWED_TERMS:
             continue
+
         if lowered not in raw and _stem(lowered) not in stems:
             return False
 
-    supported = sum(1 for token in meaningful if _stem(token) in stems)
+    supported = sum(
+        1 for token in meaningful
+        if _stem(token) in stems
+    )
 
     return supported / len(meaningful) >= MIN_SUPPORT
 
@@ -118,12 +143,10 @@ def validate_answer(
     context: str,
 ) -> str:
     """
-    Return the answer with any unsupported lines removed.
+    Validate generated text against retrieved knowledge.
 
-    * Every line is checked against the retrieved knowledge.
-    * Unsupported lines are dropped instead of rejecting the whole answer,
-      so one weak sentence does not throw away a good response.
-    * If nothing supported remains, the fallback answer is returned.
+    Unsupported factual sentences are removed individually.
+    If nothing supportable remains, return the configured fallback.
     """
 
     if not answer or not answer.strip():
@@ -144,20 +167,26 @@ def validate_answer(
         stripped = line.strip()
 
         if not stripped:
-            # keep paragraph spacing, but never two blank lines in a row
             if kept and kept[-1] != "":
                 kept.append("")
             continue
 
-        # Formatting-only lines are not factual claims.
+        # Preserve markdown structure.
         if stripped.startswith(("#", "|")) or stripped in {"---", "***"}:
             kept.append(line.rstrip())
             continue
 
-        # Check sentence by sentence so one wrong sentence does not
-        # remove the correct ones next to it.
-        sentences = re.split(r"(?<=[.!?])\s+", stripped)
-        good = [sentence for sentence in sentences if _is_supported(sentence, stems, raw)]
+        # Validate individual sentences.
+        sentences = re.split(
+            r"(?<=[.!?])\s+",
+            stripped,
+        )
+
+        good = [
+            sentence
+            for sentence in sentences
+            if _is_supported(sentence, stems, raw)
+        ]
 
         if good:
             kept.append(" ".join(good))

@@ -29,7 +29,7 @@ import re
 
 import httpx
 
-from backend.app.services.ollama_client import (
+from .ollama_client import (
     OLLAMA_KEEP_ALIVE,
     OLLAMA_MODEL,
     _get_http_client,

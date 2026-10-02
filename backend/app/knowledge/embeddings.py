@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from backend.app.services.ai import get_openai_client
+from ..services.ai import get_openai_client
 
 load_dotenv()
 
